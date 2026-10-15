@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidden Leaf Village Explorer</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0e1a12; font-family: system-ui, sans-serif; }
+        #hud { position: fixed; left: 12px; top: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; pointer-events: none; }
+        #msg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(11,19,13,0.9); color: #f2ead3; text-align: center; cursor: pointer; z-index: 10; }
+        #msg div { max-width: 480px; padding: 24px; }
+        h1 { color: #e0792b; margin-top: 0; }
+        kbd { background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="hud">Loading Village...</div>
+    <div id="msg">
+        <div>
+            <h1>Hidden Leaf Village</h1>
+            <p><kbd>W A S D</kbd> to move &nbsp; <kbd>Space</kbd> to jump &nbsp; <kbd>Mouse</kbd> to look</p>
+            <p><b>Click to Play</b></p>
+        </div>
+    </div>
+
+    <!-- Import Map to load Three.js via ES Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <!-- Main Game Script -->
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
