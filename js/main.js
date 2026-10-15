@@ -121,18 +121,50 @@ const keys = {};
 window.addEventListener('keydown', (e) => keys[e.code] = true);
 window.addEventListener('keyup', (e) => keys[e.code] = false);
 
-// Pointer Lock and overlay handling
+// Pointer Lock and overlay handling with fallback
 const msgEl = document.getElementById('msg');
+let pointerLockFallbackTimer = null;
+let mouseLookFallbackEnabled = false;
+let isMouseDownForFallback = false;
+
+function enableMouseLookFallback() {
+    if (mouseLookFallbackEnabled) return;
+    mouseLookFallbackEnabled = true;
+    // allow click-and-drag to look around when pointer lock is unavailable
+    window.addEventListener('mousedown', () => { isMouseDownForFallback = true; });
+    window.addEventListener('mouseup', () => { isMouseDownForFallback = false; });
+    window.addEventListener('mousemove', (e) => {
+        if (mouseLookFallbackEnabled && isMouseDownForFallback && document.pointerLockElement !== renderer.domElement) {
+            yaw -= e.movementX * 0.0023;
+            pitch -= e.movementY * 0.0018;
+            pitch = THREE.MathUtils.clamp(pitch, -1.0, 1.1);
+        }
+    });
+    // show a subtle hint in HUD
+    const hud = document.getElementById('hud');
+    if (hud) hud.textContent = (hud.textContent || '') + '  (Drag to look)';
+}
+
 if (msgEl) {
     msgEl.addEventListener('click', () => {
         try { renderer.domElement.focus(); } catch (e) {}
+        // attempt pointer lock
         if (renderer.domElement.requestPointerLock) renderer.domElement.requestPointerLock();
+        // fallback: if pointer lock doesn't activate quickly, hide overlay and enable mouse-look fallback
+        if (pointerLockFallbackTimer) clearTimeout(pointerLockFallbackTimer);
+        pointerLockFallbackTimer = setTimeout(() => {
+            if (document.pointerLockElement !== renderer.domElement) {
+                if (msgEl) msgEl.style.display = 'none';
+                enableMouseLookFallback();
+            }
+        }, 600);
     });
 }
 
-// Hide overlay only after pointer lock starts
+// Hide overlay only after pointer lock starts; cancel fallback when pointerlockchange occurs
 document.addEventListener('pointerlockchange', () => {
     try {
+        if (pointerLockFallbackTimer) { clearTimeout(pointerLockFallbackTimer); pointerLockFallbackTimer = null; }
         if (document.pointerLockElement === renderer.domElement) {
             if (msgEl) msgEl.style.display = 'none';
         } else {
@@ -143,7 +175,9 @@ document.addEventListener('pointerlockchange', () => {
 
 document.addEventListener('pointerlockerror', (e) => {
     console.error('PointerLock error', e);
-    if (msgEl) msgEl.style.display = 'flex';
+    if (pointerLockFallbackTimer) { clearTimeout(pointerLockFallbackTimer); pointerLockFallbackTimer = null; }
+    if (msgEl) msgEl.style.display = 'none';
+    enableMouseLookFallback();
 });
 
 // Pointer look handling
